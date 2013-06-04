@@ -1,16 +1,27 @@
-function f = gpSmooth(x,y)
+function f = gpSmooth(x,y,x_test)
 % runs a gp smoothing on input data
 % 
 % JC 2010-06-05
 
+if nargin < 3
+    x_test = x;
+end
 
 sigma_obs = 1; %std(diff(y));
 sigma_kernel = 10;
+y_bias = mean(y);
 
 K = covariance(x,x,1/sigma_kernel^2);
-L = chol(K + sigma_obs^2 * eye(size(K,1)));
-alpha = L' \ (L \ y);
-f = K' * alpha;
+K_test = covariance(x_test, x, 1/sigma_kernel^2);
+
+L = chol(K + sigma_obs^2 * eye(size(K,1)),'lower');
+alpha = L' \ (L \ (y-y_bias));
+f = K_test * alpha;
+
+f = f+y_bias;
+
+%f = K*(K+eye(size(K))/sigma_obs^2)^-1*y;
+
 return;
 
 for i = 1:size(K,2)
