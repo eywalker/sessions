@@ -28,19 +28,37 @@ classdef KalmanAutomatic < dj.Relvar & dj.AutoPopulate
             de_key = fetch(detect.Electrodes(key));
             
             m = MoKsmInterface(de_key);
-            m = getFeatures(m,'PCA');
 
-            % Parameters for sorting. Those were tweaked for tetrode
-            % recordings. Other types of data may need substantial
-            % adjustments... [AE]
-            m.params.ClusterCost = 0.0023;
-            m.params.Df = 5;
+            % treat references differently
+            detectMethod = fetch1(detect.Methods & de_key, 'detect_method_name');
+            if any(strcmp(detectMethod, {'Tetrodes', 'TetrodesV2'})) && numel(m.tt.w) == 1
+                m = getFeatures(m, 'PCA', 4);
+                m.params.DriftRate = 100 / 3600 / 1000;
+            elseif strcmp(detectMethod, 'SiliconProbes')
+                m = getFeatures(m, 'PCA', 8);
+                m.params.DriftRate = 300 / 3600 / 1000;
+            else
+                m = getFeatures(m, 'PCA', 3);
+                m.params.DriftRate = 400 / 3600 / 1000;
+            end
+            
+            switch detectMethod
+                case {'Tetrodes', 'TetrodesV2'}
+                    % Parameters for sorting. Those were tweaked for tetrode
+                    % recordings. Other types of data may need substantial
+                    % adjustments... [AE]
+                    m.params.ClusterCost = 0.002;
+                    m.params.Df = 5;
+                    m.params.Tolerance = 0.0005;
+                case 'SiliconProbes'
+                    m.params.ClusterCost = 0.0038;
+                    m.params.Df = 8;
+                    m.params.Tolerance = 0.00005;
+            end
+            
             m.params.CovRidge = 1.5;
-            m.params.DriftRate = 400 / 3600 / 1000;
             m.params.DTmu = 60 * 1000;
-            m.params.Tolerance = 0.0005;
-            m.params.Verbose = true;
-
+            
             fitted = fit(m);
             plot(fitted);
             drawnow
