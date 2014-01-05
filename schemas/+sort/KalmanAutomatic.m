@@ -24,47 +24,47 @@ classdef KalmanAutomatic < dj.Relvar & dj.AutoPopulate
     methods (Access=protected)
         function makeTuples( this, key )
             % Cluster spikes
-            
-            
             de_key = fetch(detect.Electrodes(key));
-            de_method = fetch1(detect.Methods(de_key),'detect_method_name');
-            
-            
             m = MoKsmInterface(de_key);
+
+            % default parameters
+            m.params.CovRidge = 1.5;
+            m.params.ClusterCost = 0.0023;
+            m.params.Df = 5;
+            m.params.DriftRate = 400 / 3600 / 1000;
+            m.params.DTmu = 60 * 1000;
+            m.params.Tolerance = 0.0005;
+            m.params.Verbose = true;
             
+            % setup parameters appropriate for recording method
+            de_method = fetch1(detect.Methods(de_key),'detect_method_name');
             switch de_method
                 case 'Utah'
-                    % sorting parameters specifically tweaked for Utah
-                    % array [EW 11/21/2013]
                     m = getFeatures(m, 'PCA', 8);
                     m.params.ClusterCost = 0.0038%0.0030 %0.0065;%0.0023;
                     m.params.Df = 8;
-                    m.params.CovRidge = 1.5;%%1.5;
                     m.params.DriftRate = 300 / 3600 / 1000;
                     m.params.DTmu = 100 * 1000;
-                    m.params.Tolerance = 0.00005;%0.0005;
-                    m.params.Verbose = true;
-                case 'Tetrodes'
-                    m = getFeatures(m,'PCA');
-                    % Parameters for sorting. Those were tweaked for tetrode
-                    % recordings. Other types of data may need substantial
-                    % adjustments... [AE]
-                    m.params.ClusterCost = 0.0023;
+                    m.params.Tolerance = 0.00005;
+                case {'Tetrodes', 'TetrodesV2'}
+                    if numel(m.tt.w)==1 % single electrode
+                        m = getFeatures(m, 'PCA', 4);
+                        m.params.DriftRate = 100 / 3600 / 1000;
+                    else
+                        m = getFeatures(m, 'PCA', 3);
+                        m.params.DriftRate = 400 / 3600 / 1000;
+                    end
+                    m.params.ClusterCost = 0.002;
                     m.params.Df = 5;
-                    m.params.CovRidge = 1.5;
-                    m.params.DriftRate = 400 / 3600 / 1000;
-                    m.params.DTmu = 60 * 1000;
                     m.params.Tolerance = 0.0005;
-                    m.params.Verbose = true;
+                case 'SiliconProbes'
+                    m = getFeatures(m, 'PCA', 8);
+                    m.params.DriftRate = 300 / 3600 / 1000;
+                    m.params.ClusterCost = 0.0038;
+                    m.params.Df = 8;
+                    m.params.Tolerance = 0.00005;
                 otherwise
-                    warning('No detection method specific parameters defined. Using default')
-                    m.params.ClusterCost = 0.0023;
-                    m.params.Df = 5;
-                    m.params.CovRidge = 1.5;
-                    m.params.DriftRate = 400 / 3600 / 1000;
-                    m.params.DTmu = 60 * 1000;
-                    m.params.Tolerance = 0.0005;
-                    m.params.Verbose = true;
+                    warning('No detection method specific parameters defined. Using the default')
             end
 
             fitted = fit(m);

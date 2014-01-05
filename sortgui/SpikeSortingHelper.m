@@ -60,7 +60,11 @@ classdef SpikeSortingHelper
                 self = getWaveforms(self);
                 self = getTimes(self);
                 if isfield(self.Features, 'meta') && isfield(self.Features.meta,'Feature')
-                    self = getFeatures(self,self.Features.meta.Feature);
+                    if isfield(self.Features.meta,'num')
+                        self = getFeatures(self,self.Features.meta.Feature,self.Features.meta.num);
+                    else
+                        self = getFeatures(self,self.Features.meta.Feature);
+                    end
                 end
             else
                 error('Cannot uncompress other sources than DataJoint');
@@ -132,10 +136,10 @@ classdef SpikeSortingHelper
         end
 
         % Extract features from spike waveforms
-        function self = getFeatures(self,feature, n)
-            if (nargin <3)
-                n = 3;
-            end
+
+        function self = getFeatures(self,feature,n)
+            if nargin < 3, n = 3; end
+            
             if strcmp(feature, 'Points') == 1
                 dat = cat(1,self.Waveforms.data{:});
                 X = dat([25 15 10],:)';
@@ -148,7 +152,7 @@ classdef SpikeSortingHelper
             else
                 error('Unsupported feature');
             end
-            self.Features = struct('data',X,'meta',struct('Feature',feature));
+            self.Features = struct('data',X,'meta',struct('Feature',feature,'num',n));
         end
     end
 end
