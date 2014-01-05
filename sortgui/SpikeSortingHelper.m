@@ -132,7 +132,10 @@ classdef SpikeSortingHelper
         end
 
         % Extract features from spike waveforms
-        function self = getFeatures(self,feature)
+        function self = getFeatures(self,feature, n)
+            if (nargin <3)
+                n = 3;
+            end
             if strcmp(feature, 'Points') == 1
                 dat = cat(1,self.Waveforms.data{:});
                 X = dat([25 15 10],:)';
@@ -140,7 +143,7 @@ classdef SpikeSortingHelper
                 X = [];
                 for i = 1:length(self.Waveforms.data)
                     [~,P] = princomp(self.Waveforms.data{i}');
-                    X = [X P(:,1:3)]; %#ok
+                    X = [X P(:,1:n)]; %#ok
                 end
             else
                 error('Unsupported feature');

@@ -449,6 +449,7 @@ end
 
 
 function mosSetFileButtons(~,handles,status)
+% toggles the status of buttoms
 set(handles.opPrev,'Enable',status);
 set(handles.opNext,'Enable',status);
 set(handles.opSave,'Enable',status);

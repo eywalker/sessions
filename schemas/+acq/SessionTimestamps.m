@@ -29,20 +29,27 @@ classdef SessionTimestamps < dj.Relvar
             
             % Rescale to times
             counterRate = 10e6 / 1000; % pulses / ms (should be stored somewhere)
-            counterPeriod = 2^32 / counterRate;
+            counterPeriod = 2^32 / counterRate; % period of time it takes to count one cycle
             
-            countTime = count / counterRate;
-            approximateSessionTime = timestamperTime - sessionStartTime;
+            countTime = count / counterRate; 
+            approximateSessionTime = timestamperTime - sessionStartTime; % approximately how long it has passed since session began
             
             % Compute expected counter value based on CPU time
-            approximateSessionPeriods = floor(approximateSessionTime / counterPeriod);
-            approximateResidualPeriod = mod(approximateSessionTime, counterPeriod);
+            approximateSessionPeriods = floor(approximateSessionTime / counterPeriod); % approximately how many cycles it has gone through
+            approximateResidualPeriod = mod(approximateSessionTime, counterPeriod); %
             
             % Correct edge cases where number of periods is off by one
             idx = find((approximateResidualPeriod - countTime) > counterPeriod / 2);
             approximateSessionPeriods(idx) = approximateSessionPeriods(idx) + 1;
+            %approximateSessionPeriods = approximateSessionPeriods + fix((approximateResidualPeriod - countTime) / (counterPeriod / 2));
             
             accurateTime = countTime + approximateSessionPeriods * counterPeriod;
+            plot(abs(accurateTime - approximateSessionTime));
+            val = max(abs(accurateTime - approximateSessionTime));
+            if ~isempty(val)
+                assert(val < counterPeriod / 2);
+            end
+            
         end
     end
 end
