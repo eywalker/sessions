@@ -41,9 +41,10 @@ classdef KalmanAutomatic < dj.Relvar & dj.AutoPopulate
             switch de_method
                 case 'Utah'
                     m = getFeatures(m, 'PCA', 8);
-                    m.params.ClusterCost = 0.0038%0.0030 %0.0065;%0.0023;
+                    m.params.CovRidge = 0.15;
+                    m.params.ClusterCost = 0.0038;
                     m.params.Df = 8;
-                    m.params.DriftRate = 300 / 3600 / 1000;
+                    m.params.DriftRate = 30 / 3600 / 1000;
                     m.params.DTmu = 100 * 1000;
                     m.params.Tolerance = 0.00005;
                 case {'Tetrodes', 'TetrodesV2'}
